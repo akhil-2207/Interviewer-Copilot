@@ -80,7 +80,7 @@ gemini-flash-latest
 For PDF mode, the server:
 
 1. receives `multipart/form-data`;
-2. validates PDF type, extension, signature, and the 10 MB limit;
+2. validates PDF type, extension, signature, and the 4 MB deployment-safe limit;
 3. keeps the uploaded file in memory;
 4. creates an inline `application/pdf` Gemini part from the original bytes;
 5. sends that document and the job description in one `generateContent` request;
@@ -198,6 +198,17 @@ Default local services:
 
 Vite proxies `/api` requests to the Express server during development.
 
+## Deploy to Vercel
+
+This repository includes a Vercel configuration for the Vite SPA and two thin serverless entry points for the existing Express API. Gemini still runs only on the server.
+
+1. Import the GitHub repository into Vercel or run `npx vercel link` from the project root.
+2. Add `GEMINI_API_KEY` in **Project Settings -> Environment Variables** for Production and Preview. Do not prefix it with `VITE_`.
+3. Deploy with `npx vercel --prod`, or push to the production branch after connecting the Git repository.
+4. Verify `/api/health`, then generate a guide from the seeded candidate flow.
+
+Vercel Functions currently limit request bodies to 4.5 MB. The app therefore accepts PDFs up to 4 MB, leaving room for multipart form metadata. The seeded resume is well below this limit.
+
 ## Commands
 
 ```bash
@@ -216,7 +227,7 @@ Content type: `multipart/form-data`
 | Field | Required | Description |
 |---|---|---|
 | `jobDescription` | Yes | Role responsibilities and requirements |
-| `resumePdf` | One resume source required | PDF file, maximum 10 MB |
+| `resumePdf` | One resume source required | PDF file, maximum 4 MB |
 | `resumeText` | One resume source required | Pasted resume text |
 
 If both resume sources arrive, the backend prefers the PDF.
@@ -237,7 +248,7 @@ Successful responses contain the validated guide plus backend-confirmed source m
 ## Reliability and safety
 
 - One Gemini generation request per guide—no duplicate model calls.
-- Controlled handling for missing inputs, invalid types, files over 10 MB, corrupt PDFs, password-protected PDFs, API failures, rate limits, network failures, empty responses, and malformed JSON.
+- Controlled handling for missing inputs, invalid types, files over 4 MB, corrupt PDFs, password-protected PDFs, API failures, rate limits, network failures, empty responses, and malformed JSON.
 - Prompt-injection resistance: the resume and job description are treated as untrusted source documents, not instructions.
 - Missing job evidence is explicitly marked for validation rather than invented.
 - The candidate remains unranked; the interviewer remains responsible for the decision.
@@ -247,7 +258,7 @@ Successful responses contain the validated guide plus backend-confirmed source m
 - Valid candidate resume PDF
 - Pasted-text resume mode
 - Invalid file type
-- PDF over 10 MB
+- PDF over 4 MB
 - Corrupt PDF
 - Password-protected PDF
 - Missing job description
@@ -260,6 +271,7 @@ Successful responses contain the validated guide plus backend-confirmed source m
 
 ```text
 server/
+  app.ts                   Shared Express app for local and Vercel runtimes
   routes/guide.ts          Multipart API and validation
   services/gemini.ts      Gemini prompt, PDF input and schema
   utils/validateGuide.ts  Runtime response validation
@@ -270,6 +282,7 @@ src/
   lib/                     API client and session guide state
   pages/                   Dashboard, candidate, generator and guide
 output/pdf/                Candidate-submitted PDF used by the prototype
+api/                       Vercel Function entry points
 ```
 
 ## Prototype scope

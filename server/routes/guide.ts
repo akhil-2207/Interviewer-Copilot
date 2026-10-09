@@ -5,7 +5,9 @@ import multer from "multer"
 import type { GenerateGuideResponse, ResumeSourceMetadata } from "../../shared/guide.js"
 import { GeminiServiceError, generateInterviewGuide, PDF_ANALYSIS_ERROR } from "../services/gemini.js"
 
-const MAX_PDF_BYTES = 10 * 1024 * 1024
+// Vercel Functions cap request bodies at 4.5 MB. Four MiB leaves room for
+// multipart headers while keeping the browser and server limits identical.
+const MAX_PDF_BYTES = 4 * 1024 * 1024
 const MAX_TEXT_CHARACTERS = 50_000
 
 class PdfUploadError extends Error {
@@ -104,7 +106,7 @@ guideRouter.post("/generate-guide", upload.single("resumePdf"), async (request, 
 
 const uploadErrorHandler: ErrorRequestHandler = (error, _request, response, next) => {
   if (error instanceof multer.MulterError) {
-    const message = error.code === "LIMIT_FILE_SIZE" ? "Resume PDF must be 10 MB or smaller." : "The resume PDF could not be uploaded."
+    const message = error.code === "LIMIT_FILE_SIZE" ? "Resume PDF must be 4 MB or smaller." : "The resume PDF could not be uploaded."
     const payload: GenerateGuideResponse = { success: false, error: message }
     response.status(400).json(payload)
     return

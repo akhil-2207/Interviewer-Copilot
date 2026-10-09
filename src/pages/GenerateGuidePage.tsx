@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 
-const MAX_PDF_BYTES = 10 * 1024 * 1024
+const MAX_PDF_BYTES = 4 * 1024 * 1024
 
 export interface SavedGenerationInput {
   candidateId?: string
@@ -42,7 +42,7 @@ function fileSize(bytes: number) {
 
 function validatePdf(file: File) {
   if (file.type !== "application/pdf" || !file.name.toLowerCase().endsWith(".pdf")) return "Choose a PDF file."
-  if (file.size > MAX_PDF_BYTES) return "Resume PDF must be 10 MB or smaller."
+  if (file.size > MAX_PDF_BYTES) return "Resume PDF must be 4 MB or smaller."
   if (file.size === 0) return "This PDF is empty. Choose another file."
   return null
 }
@@ -222,7 +222,7 @@ export function GenerateGuidePage() {
                       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-brand-dark shadow-card"><UploadCloud className="h-7 w-7" /></div>
                       <p className="mt-5 text-base font-bold text-ink">Upload candidate resume</p>
                       <p className="mt-2 text-xs text-muted">Drag and drop or <span className="font-semibold text-brand-dark">click to browse</span></p>
-                      <p className="mt-5 rounded-full bg-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted">PDF only · Max 10 MB</p>
+                      <p className="mt-5 rounded-full bg-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted">PDF only · Max 4 MB</p>
                     </label>
                   ) : (
                     <div className="flex min-h-[330px] flex-col items-center justify-center rounded-2xl border border-brand-dark/25 bg-brand-soft/35 p-6 text-center">

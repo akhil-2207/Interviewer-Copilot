@@ -9,5 +9,5 @@
     "esModuleInterop": true,
     "types": ["node"]
   },
-  "include": ["./**/*.ts", "../shared/**/*.ts"]
+  "include": ["./**/*.ts", "../api/**/*.ts", "../shared/**/*.ts"]
 }
