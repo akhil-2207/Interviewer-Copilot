@@ -36,7 +36,7 @@ export function CandidatePage() {
               <p className="mt-1 text-sm text-secondary sm:text-base">{candidate.role}</p>
             </div>
           </div>
-          <Button variant="brand" size="lg" onClick={() => navigate("/candidates/akhil-mathew/guide")}>
+          <Button variant="brand" size="lg" onClick={() => navigate("/generate")}>
             <Sparkles className="h-[18px] w-[18px]" /> Generate interview guide <ArrowRight className="h-4 w-4" />
           </Button>
         </div>

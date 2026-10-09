@@ -1,21 +1,57 @@
 import { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import { Check, ChevronDown, Copy, RefreshCw, Star } from "lucide-react"
-import type { InterviewQuestion } from "@/data/mockData"
+import { Check, ChevronDown, Copy, Star } from "lucide-react"
+import type { GuideQuestion, QuestionCategory } from "@shared/guide"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-export function QuestionCard({ question, defaultOpen = false }: { question: InterviewQuestion; defaultOpen?: boolean }) {
+const categoryTone: Record<QuestionCategory, "info" | "warning" | "success" | "neutral"> = {
+  technical: "info",
+  behavioural: "success",
+  experience: "neutral",
+  validation: "warning",
+}
+
+function categoryLabel(category: QuestionCategory) {
+  return category.charAt(0).toUpperCase() + category.slice(1)
+}
+
+function fallbackCopy(text: string) {
+  const textarea = document.createElement("textarea")
+  textarea.value = text
+  textarea.setAttribute("readonly", "")
+  textarea.style.position = "fixed"
+  textarea.style.opacity = "0"
+  document.body.appendChild(textarea)
+  textarea.select()
+  const copied = document.execCommand("copy")
+  textarea.remove()
+  return copied
+}
+
+export function QuestionCard({ question, number, defaultOpen = false }: { question: GuideQuestion; number: number; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen)
   const [copied, setCopied] = useState(false)
   const [mustAsk, setMustAsk] = useState(false)
 
   const copyQuestion = async (event: React.MouseEvent) => {
     event.stopPropagation()
-    await navigator.clipboard?.writeText(question.question)
-    setCopied(true)
-    window.setTimeout(() => setCopied(false), 1600)
+    let copySucceeded = false
+    try {
+      if (!navigator.clipboard) throw new Error("Clipboard API unavailable")
+      await navigator.clipboard.writeText(question.question)
+      copySucceeded = true
+    } catch {
+      copySucceeded = fallbackCopy(question.question)
+    }
+
+    if (copySucceeded) {
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1600)
+    } else {
+      setCopied(false)
+    }
   }
 
   return (
@@ -29,10 +65,10 @@ export function QuestionCard({ question, defaultOpen = false }: { question: Inte
         aria-expanded={open}
       >
         <div className="flex items-start gap-4">
-          <div className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full bg-subtle text-xs font-bold text-muted sm:flex">{String(question.id).padStart(2, "0")}</div>
+          <div className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full bg-subtle text-xs font-bold text-muted sm:flex">{String(number).padStart(2, "0")}</div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant={question.categoryTone}>{question.category}</Badge>
+              <Badge variant={categoryTone[question.category]}>{categoryLabel(question.category)}</Badge>
               {mustAsk && <Badge variant="success"><Star className="h-3 w-3 fill-current" /> Must ask</Badge>}
             </div>
             <h3 className="mt-3 text-[15px] font-semibold leading-6 tracking-[-0.01em] text-ink sm:text-base sm:leading-7">{question.question}</h3>
@@ -56,11 +92,11 @@ export function QuestionCard({ question, defaultOpen = false }: { question: Inte
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-xl bg-subtle p-4">
                   <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted">Candidate evidence</p>
-                  <p className="mt-2 text-sm leading-6 text-secondary">{question.evidence}</p>
+                  <p className="mt-2 text-sm leading-6 text-secondary">{question.candidateEvidence}</p>
                 </div>
                 <div className="rounded-xl bg-info-soft/60 p-4">
                   <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-info">Why ask this</p>
-                  <p className="mt-2 text-sm leading-6 text-secondary">{question.why}</p>
+                  <p className="mt-2 text-sm leading-6 text-secondary">{question.reason}</p>
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -72,7 +108,6 @@ export function QuestionCard({ question, defaultOpen = false }: { question: Inte
                   <Star className={cn("h-3.5 w-3.5", mustAsk && "fill-current")} />
                   {mustAsk ? "Marked as must ask" : "Mark as must ask"}
                 </Button>
-                <Button variant="ghost" size="sm"><RefreshCw className="h-3.5 w-3.5" /> Regenerate</Button>
               </div>
             </div>
           </motion.div>

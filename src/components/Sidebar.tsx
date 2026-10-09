@@ -7,7 +7,7 @@ import {
   X,
 } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
-import { NavLink } from "react-router-dom"
+import { NavLink, useLocation } from "react-router-dom"
 import { Logo } from "./Logo"
 import { cn } from "@/lib/utils"
 
@@ -15,10 +15,12 @@ const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/" },
   { label: "Interviews", icon: CalendarRange, to: "/interviews" },
   { label: "Candidates", icon: UsersRound, to: "/candidates" },
-  { label: "Generate Guide", icon: Sparkles, to: "/candidates/akhil-mathew" },
+  { label: "Generate Guide", icon: Sparkles, to: "/generate" },
 ]
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
+  const { pathname } = useLocation()
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-24 items-center justify-between px-6">
@@ -34,23 +36,30 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
         <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">Workspace</p>
         {navItems.map((item) => {
           const Icon = item.icon
+          const isSelected = item.to === "/"
+            ? pathname === "/"
+            : item.to === "/generate"
+              ? pathname === "/generate" || pathname.endsWith("/guide")
+              : item.to === "/candidates"
+                ? pathname.startsWith("/candidates") && !pathname.endsWith("/guide")
+                : pathname === item.to
           return (
             <NavLink
               key={item.label}
               to={item.to}
               end={item.to === "/"}
               onClick={onClose}
-              className={({ isActive }) => cn(
+              className={() => cn(
                 "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                isActive ? "bg-subtle text-ink" : "text-muted hover:bg-subtle/70 hover:text-ink",
+                isSelected ? "bg-subtle text-ink" : "text-muted hover:bg-subtle/70 hover:text-ink",
               )}
             >
-              {({ isActive }) => (
+              {() => (
                 <>
-                  {isActive && (
+                  {isSelected && (
                     <motion.span layoutId="sidebar-active" className="absolute inset-y-2 left-0 w-0.5 rounded-r-full bg-brand-dark" />
                   )}
-                  <Icon className={cn("h-[18px] w-[18px]", isActive ? "text-brand-dark" : "text-neutral-400 group-hover:text-secondary")} strokeWidth={1.9} />
+                  <Icon className={cn("h-[18px] w-[18px]", isSelected ? "text-brand-dark" : "text-neutral-400 group-hover:text-secondary")} strokeWidth={1.9} />
                   {item.label}
                 </>
               )}

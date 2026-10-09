@@ -6,6 +6,7 @@ import { Sidebar } from "./Sidebar"
 
 function pageMeta(pathname: string) {
   if (pathname.includes("/guide")) return { title: "Interview Guide", subtitle: "Personalised questions and evidence for your interview" }
+  if (pathname === "/generate") return { title: "Generate Guide", subtitle: "Turn resume evidence into better interview questions" }
   if (pathname.includes("akhil-mathew")) return { title: "Candidate Brief", subtitle: "Everything you need to prepare with confidence" }
   if (pathname === "/interviews") return { title: "Interviews", subtitle: "Manage your upcoming interview schedule" }
   if (pathname === "/candidates") return { title: "Candidates", subtitle: "Review candidates and preparation status" }

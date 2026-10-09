@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { StatusBadge } from "./StatusBadge"
 import { cn } from "@/lib/utils"
+import { demoGuide } from "@/data/demoGuide"
 
 export function InterviewCard({ interview }: { interview: Interview }) {
   const navigate = useNavigate()
   const viewBrief = () => navigate("/candidates/akhil-mathew")
-  const viewGuide = () => navigate("/candidates/akhil-mathew/guide", { state: { skipGeneration: true } })
+  const viewGuide = () => navigate("/candidates/akhil-mathew/guide", { state: { guide: demoGuide } })
 
   return (
     <motion.div variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } }} whileHover={{ y: -3 }} transition={{ duration: 0.22 }}>

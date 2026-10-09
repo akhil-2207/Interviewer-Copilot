@@ -2,17 +2,26 @@
   "name": "interviewer-copilot",
   "private": true,
   "version": "0.1.0",
+  "packageManager": "pnpm@11.25.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "dev": "concurrently -k -n web,api -c green,blue \"vite\" \"tsx watch server/index.ts\"",
+    "dev:web": "vite",
+    "dev:server": "tsx watch server/index.ts",
+    "build": "tsc -b && tsc --noEmit -p server/tsconfig.json && vite build",
+    "test": "tsx --test server/utils/validateGuide.test.ts server/services/gemini.test.ts",
+    "test:gemini": "tsx server/scripts/testGemini.ts",
+    "preview": "vite preview",
+    "start:server": "tsx server/index.ts"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
+    "@google/genai": "^1.52.0",
     "@radix-ui/react-slot": "^1.2.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
@@ -21,12 +30,16 @@
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.10.5",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "concurrently": "^9.2.1",
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.20.6",
     "typescript": "~5.7.2",
     "vite": "^6.0.5"
   }
