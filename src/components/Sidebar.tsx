@@ -1,9 +1,7 @@
 import {
-  CalendarRange,
   LayoutDashboard,
-  Settings,
   Sparkles,
-  UsersRound,
+  UserRound,
   X,
 } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
@@ -13,8 +11,7 @@ import { cn } from "@/lib/utils"
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/" },
-  { label: "Interviews", icon: CalendarRange, to: "/interviews" },
-  { label: "Candidates", icon: UsersRound, to: "/candidates" },
+  { label: "Candidate", icon: UserRound, to: "/candidates/akhil-mathew" },
   { label: "Generate Guide", icon: Sparkles, to: "/generate" },
 ]
 
@@ -38,11 +35,9 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           const Icon = item.icon
           const isSelected = item.to === "/"
             ? pathname === "/"
-            : item.to === "/generate"
-              ? pathname === "/generate" || pathname.endsWith("/guide")
-              : item.to === "/candidates"
-                ? pathname.startsWith("/candidates") && !pathname.endsWith("/guide")
-                : pathname === item.to
+            : item.to.startsWith("/candidates")
+              ? pathname.startsWith("/candidates")
+              : pathname === "/generate" || pathname === "/guide"
           return (
             <NavLink
               key={item.label}
@@ -67,35 +62,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           )
         })}
 
-        <div className="my-4 border-t border-line" />
-        <NavLink
-          to="/settings"
-          onClick={onClose}
-          className={({ isActive }) => cn(
-            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-            isActive ? "bg-subtle text-ink" : "text-muted hover:bg-subtle/70 hover:text-ink",
-          )}
-        >
-          <Settings className="h-[18px] w-[18px] text-neutral-400" strokeWidth={1.9} />
-          Settings
-        </NavLink>
       </nav>
-
-      <div className="p-4">
-        <div className="rounded-2xl border border-line bg-subtle/70 p-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-xs font-bold text-white">SW</div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-ink">Sarah Wilson</p>
-              <p className="truncate text-xs text-muted">Senior Interviewer</p>
-            </div>
-          </div>
-          <div className="mt-3 flex items-center gap-2 border-t border-line pt-3">
-            <span className="h-2 w-2 rounded-full bg-brand-dark" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.11em] text-muted">Hackathon demo</span>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

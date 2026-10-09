@@ -1,4 +1,15 @@
-import type { GenerateGuideInput, GenerateGuideResponse, InterviewGuide } from "@shared/guide"
+import type { GenerateGuideResponse, InterviewGuide, ResumeSourceMetadata } from "@shared/guide"
+
+export interface GenerateGuideRequest {
+  jobDescription: string
+  resumePdf?: File
+  resumeText?: string
+}
+
+export interface GeneratedGuideResult {
+  guide: InterviewGuide
+  source: ResumeSourceMetadata
+}
 
 export class GuideApiError extends Error {
   constructor(message: string) {
@@ -7,13 +18,17 @@ export class GuideApiError extends Error {
   }
 }
 
-export async function generateGuide(input: GenerateGuideInput, signal?: AbortSignal): Promise<InterviewGuide> {
+export async function generateGuide(input: GenerateGuideRequest, signal?: AbortSignal): Promise<GeneratedGuideResult> {
+  const body = new FormData()
+  body.append("jobDescription", input.jobDescription)
+  if (input.resumePdf) body.append("resumePdf", input.resumePdf, input.resumePdf.name)
+  else if (input.resumeText) body.append("resumeText", input.resumeText)
+
   let response: Response
   try {
     response = await fetch("/api/generate-guide", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input),
+      body,
       signal,
     })
   } catch (error) {
@@ -32,5 +47,5 @@ export async function generateGuide(input: GenerateGuideInput, signal?: AbortSig
     throw new GuideApiError(payload.success ? "The guide could not be generated." : payload.error)
   }
 
-  return payload.guide
+  return { guide: payload.guide, source: payload.source }
 }

@@ -3,7 +3,7 @@ import { describe, it } from "node:test"
 import { InvalidGuideError, recoverJson, validateGuide } from "./validateGuide.js"
 
 const validGuide = {
-  candidateName: "Akhil Mathew",
+  candidateName: "Test Candidate",
   role: "Graduate Software Engineer",
   summary: "Evidence-grounded summary.",
   strengths: [{ area: "APIs", evidence: "Built REST APIs.", source: "resume" }],
@@ -26,7 +26,7 @@ describe("guide response validation", () => {
 
   it("recovers one JSON object from a fenced response", () => {
     const recovered = recoverJson(`\`\`\`json\n${JSON.stringify(validGuide)}\n\`\`\``)
-    assert.equal(validateGuide(recovered).candidateName, "Akhil Mathew")
+    assert.equal(validateGuide(recovered).candidateName, "Test Candidate")
   })
 
   it("rejects malformed JSON", () => {

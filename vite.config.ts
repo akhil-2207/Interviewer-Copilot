@@ -4,6 +4,7 @@ import path from "node:path"
 
 export default defineConfig({
   plugins: [react()],
+  publicDir: path.resolve(__dirname, "./output/pdf"),
   server: {
     proxy: {
       "/api": "http://127.0.0.1:3001",

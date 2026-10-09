@@ -38,11 +38,18 @@ export interface InterviewGuide {
   questions: GuideQuestion[]
 }
 
+export type ResumeSource = "pdf" | "text"
+
+export interface ResumeSourceMetadata {
+  resumeSource: ResumeSource
+  resumeFileName?: string
+}
+
 export interface GenerateGuideInput {
-  resumeText: string
+  resumeText?: string
   jobDescription: string
 }
 
 export type GenerateGuideResponse =
-  | { success: true; guide: InterviewGuide }
+  | { success: true; guide: InterviewGuide; source: ResumeSourceMetadata }
   | { success: false; error: string }

@@ -5,13 +5,10 @@ import { RouteErrorBoundary } from "./RouteErrorBoundary"
 import { Sidebar } from "./Sidebar"
 
 function pageMeta(pathname: string) {
-  if (pathname.includes("/guide")) return { title: "Interview Guide", subtitle: "Personalised questions and evidence for your interview" }
+  if (pathname === "/guide") return { title: "Interview Guide", subtitle: "Personalised questions and evidence generated from your sources" }
   if (pathname === "/generate") return { title: "Generate Guide", subtitle: "Turn resume evidence into better interview questions" }
-  if (pathname.includes("akhil-mathew")) return { title: "Candidate Brief", subtitle: "Everything you need to prepare with confidence" }
-  if (pathname === "/interviews") return { title: "Interviews", subtitle: "Manage your upcoming interview schedule" }
-  if (pathname === "/candidates") return { title: "Candidates", subtitle: "Review candidates and preparation status" }
-  if (pathname === "/settings") return { title: "Settings", subtitle: "Manage your interviewer workspace" }
-  return { title: "Dashboard", subtitle: "Your interview preparation workspace" }
+  if (pathname.startsWith("/candidates/")) return { title: "Candidate Details", subtitle: "Submitted application and source documents" }
+  return { title: "Dashboard", subtitle: "Candidates ready for interview preparation" }
 }
 
 export function AppShell() {

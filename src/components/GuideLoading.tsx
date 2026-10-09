@@ -3,8 +3,9 @@ import { motion } from "framer-motion"
 import { Sparkles } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { LoadingStep } from "@/components/LoadingStep"
+import type { ResumeSource } from "@shared/guide"
 
-const generationSteps = [
+const textGenerationSteps = [
   "Reading candidate experience",
   "Understanding job requirements",
   "Matching evidence",
@@ -12,15 +13,24 @@ const generationSteps = [
   "Creating personalised questions",
 ]
 
-export function GuideLoading({ candidateName = "the candidate" }: { candidateName?: string }) {
+const pdfGenerationSteps = [
+  "Reading candidate resume",
+  "Understanding experience",
+  "Matching job requirements",
+  "Identifying areas to validate",
+  "Preparing interview questions",
+]
+
+export function GuideLoading({ candidateName = "the candidate", resumeSource }: { candidateName?: string; resumeSource: ResumeSource }) {
   const [activeStep, setActiveStep] = useState(0)
+  const generationSteps = resumeSource === "pdf" ? pdfGenerationSteps : textGenerationSteps
 
   useEffect(() => {
     const timer = window.setInterval(() => {
       setActiveStep((step) => Math.min(step + 1, generationSteps.length - 1))
     }, 700)
     return () => window.clearInterval(timer)
-  }, [])
+  }, [generationSteps.length])
 
   return (
     <div className="flex min-h-[calc(100vh-76px)] items-center justify-center px-4 py-10">
@@ -29,7 +39,7 @@ export function GuideLoading({ candidateName = "the candidate" }: { candidateNam
           <motion.div animate={{ rotate: [0, 8, -4, 0] }} transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}><Sparkles className="h-7 w-7" /></motion.div>
         </div>
         <div className="mt-6 text-center">
-          <Badge variant="success">Building from resume + role</Badge>
+          <Badge variant="success">{resumeSource === "pdf" ? "Gemini is analysing the PDF" : "Building from resume + role"}</Badge>
           <h2 className="mt-4 text-2xl font-bold tracking-[-0.035em] text-ink">Creating {candidateName}’s interview guide</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted">Connecting candidate evidence to the role so you can ask sharper, more relevant questions.</p>
         </div>

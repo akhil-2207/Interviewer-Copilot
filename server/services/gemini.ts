@@ -1,5 +1,5 @@
-import { GoogleGenAI } from "@google/genai"
-import type { GenerateGuideInput, InterviewGuide } from "../../shared/guide.js"
+import { createPartFromBase64, createPartFromText, GoogleGenAI } from "@google/genai"
+import type { InterviewGuide, ResumeSource } from "../../shared/guide.js"
 import { InvalidGuideError, recoverJson, validateGuide } from "../utils/validateGuide.js"
 
 const MODEL = "gemini-flash-latest"
@@ -97,6 +97,12 @@ export class GeminiServiceError extends Error {
   }
 }
 
+export type GeminiGuideInput =
+  | { resumeSource: "pdf"; resumePdf: Buffer; resumeFileName: string; jobDescription: string }
+  | { resumeSource: "text"; resumeText: string; jobDescription: string }
+
+export const PDF_ANALYSIS_ERROR = "We couldn’t analyse this PDF with Gemini. You can try again or paste the resume text instead."
+
 function statusFrom(error: unknown): number | undefined {
   if (!error || typeof error !== "object") return undefined
   const candidate = error as { status?: unknown; code?: unknown }
@@ -105,7 +111,7 @@ function statusFrom(error: unknown): number | undefined {
   return undefined
 }
 
-export function mapGeminiError(error: unknown): GeminiServiceError {
+export function mapGeminiError(error: unknown, resumeSource: ResumeSource = "text"): GeminiServiceError {
   const status = statusFrom(error)
   const message = error instanceof Error ? error.message : ""
 
@@ -115,17 +121,31 @@ export function mapGeminiError(error: unknown): GeminiServiceError {
   if (/fetch failed|network|econnreset|enotfound|timed?\s*out/i.test(message)) {
     return new GeminiServiceError("The server could not reach Gemini. Check the network connection and try again.", 503)
   }
+  if (resumeSource === "pdf") {
+    return new GeminiServiceError(PDF_ANALYSIS_ERROR, 422)
+  }
   return new GeminiServiceError("Gemini could not generate the guide. Please try again.")
 }
 
-export async function generateInterviewGuide(input: GenerateGuideInput): Promise<InterviewGuide> {
-  const apiKey = process.env.GEMINI_API_KEY?.trim()
-  if (!apiKey) {
-    throw new GeminiServiceError("Gemini API key is not configured on the server.", 503)
+function generationPrompt(jobDescription: string, includesPdf: boolean) {
+  return `Analyse the ${includesPdf ? "attached candidate resume PDF" : "candidate resume"} and job description and create the structured interview preparation guide.
+
+${includesPdf ? "The attached PDF is the candidate resume. Read the document itself and use only evidence present in it." : ""}
+
+<job_description>
+${jobDescription}
+</job_description>`
+}
+
+export function buildGeminiContents(input: GeminiGuideInput) {
+  if (input.resumeSource === "pdf") {
+    return [
+      createPartFromBase64(input.resumePdf.toString("base64"), "application/pdf"),
+      createPartFromText(generationPrompt(input.jobDescription, true)),
+    ]
   }
 
-  const ai = new GoogleGenAI({ apiKey })
-  const contents = `Analyse the resume and job description below and create the structured interview preparation guide.
+  return `Analyse the resume and job description below and create the structured interview preparation guide.
 
 <candidate_resume>
 ${input.resumeText}
@@ -134,6 +154,16 @@ ${input.resumeText}
 <job_description>
 ${input.jobDescription}
 </job_description>`
+}
+
+export async function generateInterviewGuide(input: GeminiGuideInput): Promise<InterviewGuide> {
+  const apiKey = process.env.GEMINI_API_KEY?.trim()
+  if (!apiKey) {
+    throw new GeminiServiceError("Gemini API key is not configured on the server.", 503)
+  }
+
+  const ai = new GoogleGenAI({ apiKey })
+  const contents = buildGeminiContents(input)
 
   try {
     const response = await ai.models.generateContent({
@@ -165,6 +195,6 @@ ${input.jobDescription}
       status: status ?? "unknown",
       message: message.slice(0, 500) || "No error message returned",
     })
-    throw mapGeminiError(error)
+    throw mapGeminiError(error, input.resumeSource)
   }
 }

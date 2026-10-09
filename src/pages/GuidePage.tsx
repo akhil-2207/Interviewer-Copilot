@@ -3,20 +3,20 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
 import {
   AlertTriangle, ArrowLeft, Check, CheckCircle2, CircleAlert, Clock3, Download,
-  FileText, MessageSquareText, MoreHorizontal, Play, RotateCcw, ShieldCheck,
-  Sparkles, Target,
+  FileText, MessageSquareText, MoreHorizontal, Play, RotateCcw, ShieldCheck, Target,
 } from "lucide-react"
-import type { EvidenceLevel, GenerateGuideInput, InterviewGuide } from "@shared/guide"
+import type { EvidenceLevel, InterviewGuide, ResumeSourceMetadata } from "@shared/guide"
 import { QuestionCard } from "@/components/QuestionCard"
 import { SectionHeader } from "@/components/SectionHeader"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { demoGuide } from "@/data/demoGuide"
+import type { SavedGenerationInput } from "@/pages/GenerateGuidePage"
 
 interface GuideLocationState {
-  generationInput?: GenerateGuideInput
+  generationInput?: SavedGenerationInput
   guide?: InterviewGuide
+  source?: ResumeSourceMetadata
 }
 
 const evidenceTone: Record<EvidenceLevel, "success" | "info" | "warning" | "neutral"> = {
@@ -30,8 +30,7 @@ function titleCase(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
-function GuideError({ detail, onRetry, onDemo }: { detail: string; onRetry: () => void; onDemo: () => void }) {
-  const navigate = useNavigate()
+function GuideError({ detail, onRetry }: { detail: string; onRetry: () => void }) {
   return (
     <div className="flex min-h-[calc(100vh-76px)] items-center justify-center px-4 py-10">
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-lg rounded-3xl border border-line bg-white p-7 text-center shadow-float sm:p-9">
@@ -39,33 +38,30 @@ function GuideError({ detail, onRetry, onDemo }: { detail: string; onRetry: () =
         <Badge variant="warning" className="mt-5">Generation paused</Badge>
         <h2 className="mt-4 text-2xl font-bold tracking-[-0.035em] text-ink">We couldn’t generate the guide right now.</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted">{detail}</p>
-        <div className="mt-6 grid gap-2 sm:grid-cols-2">
-          <Button variant="outline" onClick={onRetry}><RotateCcw className="h-4 w-4" /> Try again</Button>
-          <Button variant="brand" onClick={onDemo}><Sparkles className="h-4 w-4" /> Use demo guide</Button>
-        </div>
-        <button onClick={() => navigate("/generate")} className="focus-ring mt-5 rounded-lg text-xs font-semibold text-muted hover:text-ink">Return to the source documents</button>
+        <Button variant="brand" className="mt-6" onClick={onRetry}><RotateCcw className="h-4 w-4" /> Return to source documents</Button>
       </motion.div>
     </div>
   )
 }
 
-function GuideContent({ guide, demo = false, sourceInput }: { guide: InterviewGuide; demo?: boolean; sourceInput?: GenerateGuideInput }) {
+function GuideContent({ guide, sourceInput, source }: { guide: InterviewGuide; sourceInput?: SavedGenerationInput; source?: ResumeSourceMetadata }) {
   const navigate = useNavigate()
   const [showAllQuestions, setShowAllQuestions] = useState(false)
   const visibleQuestions = showAllQuestions ? guide.questions : guide.questions.slice(0, 4)
   const remainingQuestions = guide.questions.length - visibleQuestions.length
+  const sourcePath = sourceInput?.candidateId ? `/generate?candidate=${sourceInput.candidateId}` : "/generate"
 
   return (
     <div className="mx-auto max-w-[1280px] px-4 py-7 sm:px-6 sm:py-9 xl:px-10">
       <div className="mb-5 flex items-center justify-between">
-        <button onClick={() => navigate("/generate", { state: sourceInput ? { generationInput: sourceInput } : undefined })} className="focus-ring flex items-center gap-2 rounded-lg text-xs font-semibold text-muted transition-colors hover:text-ink"><ArrowLeft className="h-4 w-4" /> Source documents</button>
+        <button onClick={() => navigate(sourcePath, { state: sourceInput ? { generationInput: sourceInput } : undefined })} className="focus-ring flex items-center gap-2 rounded-lg text-xs font-semibold text-muted transition-colors hover:text-ink"><ArrowLeft className="h-4 w-4" /> Source documents</button>
         <div className="flex items-center gap-2"><Button variant="outline" size="sm" className="hidden sm:flex"><Download className="h-3.5 w-3.5" /> Export</Button><Button variant="outline" size="icon" className="h-9 w-9" aria-label="More guide options"><MoreHorizontal className="h-4 w-4" /></Button></div>
       </div>
 
       <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="overflow-hidden rounded-3xl bg-ink p-6 text-white shadow-card sm:p-8">
         <div className="flex flex-col justify-between gap-7 lg:flex-row lg:items-center">
           <div>
-            <div className="flex flex-wrap gap-2"><Badge className="bg-brand text-ink"><CheckCircle2 className="h-3 w-3" /> Ready for interview</Badge>{demo && <Badge className="bg-white/10 text-neutral-200">Demo guide</Badge>}</div>
+            <div className="flex flex-wrap gap-2"><Badge className="bg-brand text-ink"><CheckCircle2 className="h-3 w-3" /> Generated by Gemini</Badge>{source?.resumeSource === "pdf" && <Badge className="bg-white/10 text-neutral-100"><FileText className="h-3 w-3" /> PDF analysed by Gemini{source.resumeFileName ? ` · ${source.resumeFileName}` : ""}</Badge>}</div>
             <h2 className="mt-4 text-3xl font-bold tracking-[-0.04em] sm:text-4xl">Interview Guide</h2>
             <p className="mt-2 text-sm text-neutral-300">{guide.candidateName} <span className="mx-2 text-neutral-600">·</span> {guide.role}</p>
           </div>
@@ -136,9 +132,9 @@ export function GuidePage() {
   const navigate = useNavigate()
   const location = useLocation()
   const state = (location.state ?? {}) as GuideLocationState
-  const [guide, setGuide] = useState<InterviewGuide | null>(state.guide ?? null)
-  const [isDemo, setIsDemo] = useState(state.guide === demoGuide)
+  const guide = state.guide ?? null
+  const sourcePath = state.generationInput?.candidateId ? `/generate?candidate=${state.generationInput.candidateId}` : "/generate"
 
-  if (!guide) return <GuideError detail="No guide data was found. Return to the source documents and generate a guide, or use the explicit demo fallback." onRetry={() => navigate("/generate", { state: state.generationInput ? { generationInput: state.generationInput } : undefined })} onDemo={() => { setGuide(demoGuide); setIsDemo(true) }} />
-  return <GuideContent guide={guide} demo={isDemo} sourceInput={state.generationInput} />
+  if (!guide) return <GuideError detail="No live Gemini guide was found. Return to the source documents and generate one from a resume and job description." onRetry={() => navigate(sourcePath, { state: state.generationInput ? { generationInput: state.generationInput } : undefined })} />
+  return <GuideContent guide={guide} sourceInput={state.generationInput} source={state.source} />
 }
