@@ -2,6 +2,8 @@
 
 Interviewer Copilot turns a candidate resume and job description into an evidence-grounded interview preparation guide for a human interviewer.
 
+**Live demo:** [zeil-hackathon-seven.vercel.app](https://zeil-hackathon-seven.vercel.app)
+
 The product philosophy is simple:
 
 > AI should help the interviewer ask better questions, not make the hiring decision.
